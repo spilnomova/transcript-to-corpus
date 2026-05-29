@@ -1,2 +1,12 @@
 streamlit
 pandas
+numpy
+tokenize_uk
+pymorphy3
+pymorphy3-dicts-uk
+# requests
+
+# pip install -U pip setuptools wheel
+# pip install -U 'spacy[apple]'    
+# python -m spacy download uk_core_news_sm
+# python -m spacy download uk_core_news_trf
