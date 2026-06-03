@@ -79,20 +79,39 @@ if uploaded:
     transcript_tok_morph = [get_morph(w) for w in transcript_tok_lower]
     transcript_tok_lemma = [get_lemma(m) for m in transcript_tok_morph]
     transcript_tok_pos = [get_pos(m) for m in transcript_tok_morph]
-    transcript_tok_lang = [language(lemma, pos) for lemma, pos in zip(transcript_tok_lemma, transcript_tok_pos)]
 
     df_out = pd.DataFrame({
-        'слово': transcript_tok,
+        'id_': range(1, len(transcript_tok) + 1),
+        'слово_': transcript_tok,
         'слово_з_малої': transcript_tok_lower,
         'лема': [m.normal_form for m in transcript_tok_morph],
-        'частина мови': [get_pos(m) for m in transcript_tok_morph],
-        'українське': [l[0] for l in transcript_tok_lang],
-        'неукраїнське': [l[1] for l in transcript_tok_lang]
+        'частина мови': [get_pos(m) for m in transcript_tok_morph]
     })
 
-    st.write("Готово! Забирай і перевіряй!")
+    df_out_sorted = df_out.sort_values(by='лема')
 
-    csv = df_out.to_csv(index=False)
+    transcript_tok_lang = []
+    lemma_cur = ""
+    for lemma, pos in zip(df_out_sorted['лема'], df_out_sorted['частина мови']):
+        if lemma == lemma_cur:
+            transcript_tok_lang.append((numpy.nan, numpy.nan))
+        else:
+            transcript_tok_lang.append(language(lemma, pos))
+            lemma_cur = lemma
+
+    df_out_sorted.insert(0, "id", df_out['id_'].tolist())
+    df_out_sorted.insert(1, "слово", df_out['слово_'].tolist())
+    df_out_sorted.insert(2, "_", [numpy.nan] * len(transcript_tok))
+    df_out_sorted['українське'] = [l[0] for l in transcript_tok_lang]
+    df_out_sorted['неукраїнське'] = [l[1] for l in transcript_tok_lang]
+
+    csv = df_out_sorted.to_csv(
+        sep=';',
+        index=False,
+        encoding="utf-8-sig"
+    )
+
+    st.write("Готово! Забирай і перевіряй!")
 
     st.download_button(
         "Завантажити результат",
