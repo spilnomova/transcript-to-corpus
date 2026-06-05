@@ -3,6 +3,7 @@ import pandas as pd
 import numpy
 import tokenize_uk
 import pymorphy3
+from collections import Counter
 
 # Global variables
 
@@ -105,7 +106,18 @@ if uploaded:
     df_out_sorted['українське'] = [l[0] for l in transcript_tok_lang]
     df_out_sorted['неукраїнське'] = [l[1] for l in transcript_tok_lang]
 
-    csv = df_out_sorted.to_csv(
+    csv_1 = df_out_sorted.to_csv(
+        sep=';',
+        index=False,
+        encoding="utf-8-sig"
+    )
+
+    df_for_freq = df_out_sorted[['лема', 'українське', 'неукраїнське']]
+    df_out_stats = df_for_freq[~numpy.isnan(df_for_freq['українське']) | ~numpy.isnan(df_for_freq['неукраїнське'])]
+    freqs = Counter(df_for_freq['лема'])
+    df_out_stats.insert(1, "частотність", [freqs[lemma] for lemma in df_out_stats['лема']])
+
+    csv_2 = df_out_stats.to_csv(
         sep=';',
         index=False,
         encoding="utf-8-sig"
@@ -114,8 +126,14 @@ if uploaded:
     st.write("Готово! Забирай і перевіряй!")
 
     st.download_button(
-        "Завантажити результат",
-        csv,
-        "result.csv",
+        "Завантажити корпус",
+        csv_2,
+        "Корпус_" + uploaded.name,
+        "text/csv"
+    )
+    st.download_button(
+        "Завантажити повний розбір",
+        csv_1,
+        "Розбір_" + uploaded.name,
         "text/csv"
     )
