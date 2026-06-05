@@ -16,6 +16,15 @@ with open("dict/vesum.txt", "r") as f:
 
 FUNCTIONAL = {"PREP", "CONJ", "PRCL", "INTJ"}
 
+# UA sorting
+
+ALPHABET = "абвгґдеєжзиіїйклмнопрстуфхцчшщьюя"
+
+order = {c: i for i, c in enumerate(ALPHABET)}
+
+def sort_ua(word):
+    return [order.get(ch.lower(), 999) for ch in word]
+
 # Pre-processing with pymorphy3
 
 def get_morph(word):
@@ -73,7 +82,6 @@ if uploaded:
     transcript = " ".join(transcript_list)
 
     st.write("Прочитав стенограму.")
-    st.write("Ще трішки!")
 
     transcript_tok = [w for w in tokenize_uk.tokenize_words(transcript) if w.isalpha()]
     transcript_tok_lower = [t.lower().replace("ʼ", "'") for t in transcript_tok]
@@ -89,7 +97,7 @@ if uploaded:
         'частина мови': [get_pos(m) for m in transcript_tok_morph]
     })
 
-    df_out_sorted = df_out.sort_values(by='лема')
+    df_out_sorted = df_out.sort_values(by='лема', key=lambda s: s.map(sort_ua))
 
     transcript_tok_lang = []
     lemma_cur = ""
@@ -99,6 +107,8 @@ if uploaded:
         else:
             transcript_tok_lang.append(language(lemma, pos))
             lemma_cur = lemma
+
+    st.write("Ще трішки!")
 
     df_out_sorted.insert(0, "id", df_out['id_'].tolist())
     df_out_sorted.insert(1, "слово", df_out['слово_'].tolist())
