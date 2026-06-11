@@ -36,12 +36,14 @@ def get_morph(word):
     return morphs[0]
 
 def get_lemma(word_morph):
-    if word_morph.word == "можна":
-        return "можна"
+    fake_methods = {pymorphy3.units.by_analogy.UnknownPrefixAnalyzer,
+                    pymorphy3.units.by_analogy.KnownSuffixAnalyzer.FakeDictionary}
+    if word_morph.word in {"можна", "окуляри", "очки"}:
+        return word_morph.word
     elif word_morph.word == "зуби":
         return "зуб"
-    elif word_morph.word == "окуляри":
-        return "окуляри"
+    elif set.intersection(fake_methods, set([type(i[0]) for i in word_morph.methods_stack])):
+        return word_morph.word
     else:
         return word_morph.normal_form
 
@@ -93,8 +95,8 @@ if uploaded:
         'id_': range(1, len(transcript_tok) + 1),
         'слово_': transcript_tok,
         'слово_з_малої': transcript_tok_lower,
-        'лема': [m.normal_form for m in transcript_tok_morph],
-        'частина мови': [get_pos(m) for m in transcript_tok_morph]
+        'лема': transcript_tok_lemma,
+        'частина мови': transcript_tok_pos
     })
 
     df_out_sorted = df_out.sort_values(by='лема', key=lambda s: s.map(sort_ua))
