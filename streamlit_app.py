@@ -2,19 +2,9 @@ import streamlit as st
 import pandas as pd
 import numpy
 import tokenize_uk
-import pymorphy3
 from collections import Counter
-
-# Global variables
-
-morph = pymorphy3.MorphAnalyzer(lang="uk")
-
-VESUM = set()
-with open("dict/vesum.txt", "r") as f:
-    for line in f.readlines():
-        VESUM.add(line.strip())
-
-FUNCTIONAL = {"PREP", "CONJ", "PRCL", "INTJ"}
+from aux.parse_pm3 import *
+from aux.lang_id import *
 
 # UA sorting
 
@@ -24,49 +14,6 @@ order = {c: i for i, c in enumerate(ALPHABET)}
 
 def sort_ua(word):
     return [order.get(ch.lower(), 999) for ch in word]
-
-# Pre-processing with pymorphy3
-
-def get_morph(word):
-    morphs = morph.parse(word)
-    for i in range(len(morphs)):
-        if morphs[i].tag.POS in {"NPRO", "PREP", "NUMR"} or \
-            morphs[i].normal_form in {"бути", "хотіти", "людина"}:
-            return morphs[i]
-    return morphs[0]
-
-def get_lemma(word_morph):
-    fake_methods = {pymorphy3.units.by_analogy.UnknownPrefixAnalyzer,
-                    pymorphy3.units.by_analogy.KnownSuffixAnalyzer.FakeDictionary}
-    if word_morph.word in {"можна", "окуляри", "очки"}:
-        return word_morph.word
-    elif word_morph.word == "зуби":
-        return "зуб"
-    elif set.intersection(fake_methods, set([type(i[0]) for i in word_morph.methods_stack])):
-        return word_morph.word
-    else:
-        return word_morph.normal_form
-
-def get_pos(word_morph):
-    if word_morph.tag.POS == None:
-        return "UNKN"
-    elif word_morph.word == "ще":
-        return "NPRO"
-    else:
-        return word_morph.tag.POS
-
-def language(lemma, pos):
-    if lemma == "ще":
-        return (1, numpy.nan)
-    if pos in {None, "UNKN"} or lemma == "носок":
-        return (numpy.nan, 1)
-    score = 1
-    if pos in FUNCTIONAL or lemma in {"ні", "так", "нє", "нєт", "да"}:
-        score = 0.3
-    if lemma in VESUM:
-        return (score, numpy.nan)
-    else:
-        return (numpy.nan, score)
 
 # The Browser App
 
@@ -107,7 +54,8 @@ if uploaded:
         if lemma == lemma_cur:
             transcript_tok_lang.append((numpy.nan, numpy.nan))
         else:
-            transcript_tok_lang.append(language(lemma, pos))
+            lang = language(lemma, pos)
+            transcript_tok_lang.append((lang["score"], numpy.nan) if lang["ua"] else (numpy.nan, lang["score"]))
             lemma_cur = lemma
 
     st.write("Ще трішки!")
