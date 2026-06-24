@@ -3,17 +3,9 @@ import pandas as pd
 import numpy
 import tokenize_uk
 from collections import Counter
-from src.parse_pm3 import *
 from src.lang_id import *
-
-# UA sorting
-
-ALPHABET = "абвгґдеєжзиіїйклмнопрстуфхцчшщьюя"
-
-order = {c: i for i, c in enumerate(ALPHABET)}
-
-def sort_ua(word):
-    return [order.get(ch.lower(), 999) for ch in word]
+from src.parse_pm3 import *
+from src.utils import *
 
 # The Browser App
 
@@ -63,11 +55,14 @@ if uploaded:
                                            key=lambda s: s.map(sort_ua))
     
         transcript_tok_lang = []
+        word_forms = dict()
         lemma_cur = ""
-        for lemma, pos in zip(df_out_sorted['лема'],
-                              df_out_sorted['частина мови']):
+        for word, lemma, pos in zip(df_out_sorted['слово_з_малої'],
+                                    df_out_sorted['лема'],
+                                    df_out_sorted['частина мови']):
             if lemma == lemma_cur:
                 transcript_tok_lang.append((numpy.nan, numpy.nan, numpy.nan))
+                word_forms[lemma].add(word)
             else:
                 lang = language(lemma, pos)
                 if not lang["ua"]:
@@ -82,6 +77,7 @@ if uploaded:
                                                 1.0 if cognate == False
                                                     else numpy.nan))
                 lemma_cur = lemma
+                word_forms[lemma] = {word}
     
         st.write("Ще трішки!")
     
@@ -105,6 +101,9 @@ if uploaded:
         freqs = Counter(df_for_freq['лема'])
         df_out_stats.insert(1, "частотність",
                             [freqs[lemma] for lemma in df_out_stats['лема']])
+        df_out_stats.insert(1, "словоформи",
+                            [", ".join(word_forms[lemma])
+                             for lemma in df_out_stats['лема']])
     
         csv_2 = df_out_stats.to_csv(
             sep=';',
