@@ -13,10 +13,14 @@ def get_morph(word):
 def get_lemma(word_morph):
     fake_methods = {pymorphy3.units.by_analogy.UnknownPrefixAnalyzer,
                     pymorphy3.units.by_analogy.KnownSuffixAnalyzer.FakeDictionary}
-    if word_morph.word in {"єсть", "можна", "окуляри", "очки", "патом"}:
+    exceptions = {"зуби": "зуб",
+                  "мишку": "мишка",
+                  "червоним": "червоний"}
+    if word_morph.word in {"бить", "єсть", "животіє", "мишка", "можна", "патом",
+                           "окуляри", "очки", "сходи", "хованки"}:
         return word_morph.word
-    elif word_morph.word == "зуби":
-        return "зуб"
+    elif word_morph.word in exceptions.keys():
+        return exceptions[word_morph.word]
     elif set.intersection(fake_methods, set([type(i[0]) for i in word_morph.methods_stack])):
         return word_morph.word
     else:

@@ -3,8 +3,8 @@ import pandas as pd
 import numpy
 import tokenize_uk
 from collections import Counter
-from aux.parse_pm3 import *
-from aux.lang_id import *
+from src.parse_pm3 import *
+from src.lang_id import *
 
 # UA sorting
 

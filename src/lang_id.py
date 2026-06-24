@@ -7,14 +7,14 @@ CONSONANTS = set("бвгґджзйклмнпрстфхцчшщ")
 
 VESUM = set()
 
-with open("./dict/vesum.txt", "r") as f:
+with open("./data/vesum_lemmas.txt", "r") as f:
     for line in f.readlines():
         VESUM.add(line.strip())
 
-with open('./dict/wiktionary-ua2ru.json', 'r') as file:
+with open('./data/wiktionary-ua2ru.json', 'r') as file:
     UA2RU = json.load(file)
 
-with open('./dict/custom-ua2ru.json', 'r') as file:
+with open('./data/custom-ua2ru.json', 'r') as file:
     UA2RU.update(json.load(file))
 
 def language(lemma, pos):
@@ -42,21 +42,25 @@ def similarity(string1, string2):
 # similarity("кіт", "кот")
 
 def related_to_ru(uk_word):
+    # exceptions
+    if uk_word in {"підлога", "хлопчик"}:
+        return False
+    # comparison
     try:
         ru_words = UA2RU[uk_word]
+        scores = []
+        for ru_word in ru_words:
+            scores.append(similarity(uk_word, ru_word))
+        if max(scores) > 0.6:
+            return True
+        else:
+            return False
     except:
         if len(uk_word) > 4 and uk_word[-2:] in {"ся", "сь"}:
             return related_to_ru(uk_word[:-2])
         else:
-            # print("No translation found:", uk_word)
+            print("No translation found:", uk_word)
             return None
-    scores = []
-    for ru_word in ru_words:
-        scores.append(similarity(uk_word, ru_word))
-    if max(scores) > 0.5:
-        return True
-    else:
-        return False
 
 # related_to_ru("око")
 # related_to_ru("побігти")
