@@ -37,6 +37,7 @@ if uploaded:
         
     else:
         transcript_list = df[df["Хто говорить"]=="Дитина"]["Стенограма"].to_list()
+        transcript_list = [i for i in transcript_list if isinstance(i, str)]
         transcript = " ".join(transcript_list)
     
         st.write("Прочитав стенограму.")
