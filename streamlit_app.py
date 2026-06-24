@@ -66,12 +66,20 @@ if uploaded:
         for lemma, pos in zip(df_out_sorted['лема'],
                               df_out_sorted['частина мови']):
             if lemma == lemma_cur:
-                transcript_tok_lang.append((numpy.nan, numpy.nan))
+                transcript_tok_lang.append((numpy.nan, numpy.nan, numpy.nan))
             else:
                 lang = language(lemma, pos)
-                transcript_tok_lang.append((lang["score"], numpy.nan)
-                                           if lang["ua"]
-                                           else (numpy.nan, lang["score"]))
+                if not lang["ua"]:
+                    transcript_tok_lang.append((numpy.nan, lang["score"],
+                                                numpy.nan))
+                elif lang["score"] == 0.3:
+                    transcript_tok_lang.append((lang["score"], numpy.nan,
+                                                numpy.nan))
+                else:
+                    cognate = related_to_ru(lemma)
+                    transcript_tok_lang.append((lang["score"], numpy.nan,
+                                                1.0 if cognate == False
+                                                    else numpy.nan))
                 lemma_cur = lemma
     
         st.write("Ще трішки!")
@@ -81,6 +89,7 @@ if uploaded:
         df_out_sorted.insert(2, "_", [numpy.nan] * len(transcript_tok))
         df_out_sorted['українське'] = [l[0] for l in transcript_tok_lang]
         df_out_sorted['неукраїнське'] = [l[1] for l in transcript_tok_lang]
+        df_out_sorted['питомо українське'] = [l[2] for l in transcript_tok_lang]
     
         csv_1 = df_out_sorted.to_csv(
             sep=';',
@@ -88,7 +97,8 @@ if uploaded:
             encoding="utf-8-sig"
         )
     
-        df_for_freq = df_out_sorted[['лема', 'українське', 'неукраїнське']]
+        df_for_freq = df_out_sorted[['лема', 'українське', 'неукраїнське',
+                                     'питомо українське']]
         df_out_stats = df_for_freq[~numpy.isnan(df_for_freq['українське']) |
                                    ~numpy.isnan(df_for_freq['неукраїнське'])]
         freqs = Counter(df_for_freq['лема'])

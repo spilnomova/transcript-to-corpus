@@ -1,9 +1,21 @@
+import json
+import Levenshtein
+
+FUNCTIONAL = {"PREP", "CONJ", "PRCL", "INTJ"}
+
+CONSONANTS = set("бвгґджзйклмнпрстфхцчшщ")
+
 VESUM = set()
-with open("dict/vesum.txt", "r") as f:
+
+with open("./dict/vesum.txt", "r") as f:
     for line in f.readlines():
         VESUM.add(line.strip())
 
-FUNCTIONAL = {"PREP", "CONJ", "PRCL", "INTJ"}
+with open('./dict/wiktionary-ua2ru.json', 'r') as file:
+    UA2RU = json.load(file)
+
+with open('./dict/custom-ua2ru.json', 'r') as file:
+    UA2RU.update(json.load(file))
 
 def language(lemma, pos):
     # exceptions
@@ -21,3 +33,30 @@ def language(lemma, pos):
         return {"ua": True, "score": score}
     else:
         return {"ua": False, "score": score}
+
+def similarity(string1, string2):
+    string1 = "".join([char for char in string1 if char in CONSONANTS])
+    string2 = "".join([char for char in string2 if char in CONSONANTS])
+    return Levenshtein.ratio(string1, string2)
+
+# similarity("кіт", "кот")
+
+def related_to_ru(uk_word):
+    try:
+        ru_words = UA2RU[uk_word]
+    except:
+        if len(uk_word) > 4 and uk_word[-2:] in {"ся", "сь"}:
+            return related_to_ru(uk_word[:-2])
+        else:
+            # print("No translation found:", uk_word)
+            return None
+    scores = []
+    for ru_word in ru_words:
+        scores.append(similarity(uk_word, ru_word))
+    if max(scores) > 0.5:
+        return True
+    else:
+        return False
+
+# related_to_ru("око")
+# related_to_ru("побігти")
