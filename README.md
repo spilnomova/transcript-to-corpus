@@ -15,8 +15,8 @@ The input csv is expected to have columns "Хто говорить" and "Сте�
 
 ## Dictionaries Used
 
-The Ukrainian-russian dictionary used to detect potential cognates is made up of:
-- [wiktionary-ua2ru.json|dict/wiktionary-ua2ru.json], parsed from the dump of the Ukrainian Wiktionary at https://dumps.wikimedia.org/ukwiktionary/20260601/;
-- [wiktionary-ua2ru.json|dict/wiktionary-ua2ru.json], compiled semi-manually from the translations missing from Wiktionary, translated by DeepL, and verified manually.
+The Ukrainian-russian dictionary used to detect potential cognates is made of:
+- [wiktionary-ua2ru.json](dict/wiktionary-ua2ru.json), parsed from the dump of the Ukrainian Wiktionary (see [parse_wiktionary.ipynb](scripts/parse_wiktionary.ipynb));
+- [custom-ua2ru.json](dict/custom-ua2ru.json), compiled semi-manually from the translations missing from Wiktionary, translated by DeepL, and verified manually.
 
-The list of Ukrainian words [vesum.txt|dict/vesum.txt] was extracted from the VESUM dictionary at https://github.com/brown-uk/dict_uk.
+The list of Ukrainian words [vesum.txt](dict/vesum.txt) was extracted from the VESUM dictionary at https://github.com/brown-uk/dict_uk.
