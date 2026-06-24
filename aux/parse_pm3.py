@@ -13,7 +13,7 @@ def get_morph(word):
 def get_lemma(word_morph):
     fake_methods = {pymorphy3.units.by_analogy.UnknownPrefixAnalyzer,
                     pymorphy3.units.by_analogy.KnownSuffixAnalyzer.FakeDictionary}
-    if word_morph.word in {"можна", "окуляри", "очки"}:
+    if word_morph.word in {"єсть", "можна", "окуляри", "очки", "патом"}:
         return word_morph.word
     elif word_morph.word == "зуби":
         return "зуб"
