@@ -34,6 +34,8 @@ if uploaded:
     
         st.write("Прочитав стенограму.")
         st.write("Працюю :)")
+
+        # Full parse of the transcript
     
         transcript_tok = [w for w in tokenize_uk.tokenize_words(transcript)
                           if w.isalpha()]
@@ -53,59 +55,44 @@ if uploaded:
     
         df_out_sorted = df_out.sort_values(by='лема',
                                            key=lambda s: s.map(sort_ua))
-    
-        transcript_tok_lang = []
-        word_forms = dict()
-        lemma_cur = ""
-        for word, lemma, pos in zip(df_out_sorted['слово_з_малої'],
-                                    df_out_sorted['лема'],
-                                    df_out_sorted['частина мови']):
-            if lemma == lemma_cur:
-                transcript_tok_lang.append((numpy.nan, numpy.nan, numpy.nan))
-                word_forms[lemma].add(word)
-            else:
-                lang = language(lemma, pos)
-                if not lang["ua"]:
-                    transcript_tok_lang.append((numpy.nan, lang["score"],
-                                                numpy.nan))
-                elif lang["score"] == 0.3:
-                    transcript_tok_lang.append((lang["score"], numpy.nan,
-                                                numpy.nan))
-                else:
-                    cognate = related_to_ru(lemma)
-                    transcript_tok_lang.append((lang["score"], numpy.nan,
-                                                1.0 if cognate == False
-                                                    else numpy.nan))
-                lemma_cur = lemma
-                word_forms[lemma] = {word}
-    
-        st.write("Ще трішки!")
-    
         df_out_sorted.insert(0, "id", df_out['id_'].tolist())
         df_out_sorted.insert(1, "слово", df_out['слово_'].tolist())
         df_out_sorted.insert(2, "_", [numpy.nan] * len(transcript_tok))
-        df_out_sorted['українське'] = [l[0] for l in transcript_tok_lang]
-        df_out_sorted['неукраїнське'] = [l[1] for l in transcript_tok_lang]
-        df_out_sorted['питомо українське'] = [l[2] for l in transcript_tok_lang]
     
-        csv_1 = df_out_sorted.to_csv(
+        csv_full = df_out_sorted.to_csv(
             sep=';',
             index=False,
             encoding="utf-8-sig"
         )
     
-        df_for_freq = df_out_sorted[['лема', 'українське', 'неукраїнське',
-                                     'питомо українське']]
-        df_out_stats = df_for_freq[~numpy.isnan(df_for_freq['українське']) |
-                                   ~numpy.isnan(df_for_freq['неукраїнське'])]
-        freqs = Counter(df_for_freq['лема'])
-        df_out_stats.insert(1, "частотність",
-                            [freqs[lemma] for lemma in df_out_stats['лема']])
-        df_out_stats.insert(1, "словоформи",
-                            [", ".join(word_forms[lemma])
-                             for lemma in df_out_stats['лема']])
+        st.write("Ще трішки!")
     
-        csv_2 = df_out_stats.to_csv(
+        # Statistics and language analysis
+        
+        word_forms, lang_ids = dict(), dict()
+        lemma_cur = ""
+        for word, lemma, pos in zip(df_out_sorted['слово_з_малої'],
+                                    df_out_sorted['лема'],
+                                    df_out_sorted['частина мови']):
+            if lemma == lemma_cur:
+                word_forms[lemma].add(word)
+            else:
+                word_forms[lemma] = {word}
+                lang_ids[lemma] = language(lemma, pos)
+                lemma_cur = lemma
+    
+        freqs = Counter(df_out_sorted['лема'])
+        lemmas = sorted(freqs.keys(), key=lambda x: sort_ua(x))
+        df_out_stats = pd.DataFrame({
+            "лема": lemmas,
+            "словоформи": [", ".join(word_forms[lemma]) for lemma in lemmas],
+            "частотність": [freqs[lemma] for lemma in lemmas],
+            "українське": [lang_ids[lemma]["ua"] for lemma in lemmas],
+            "неукраїнське": [lang_ids[lemma]["non-ua"] for lemma in lemmas],
+            "питомо українське": [lang_ids[lemma]["only-ua"] for lemma in lemmas]
+        })
+    
+        csv_stats = df_out_stats.to_csv(
             sep=';',
             index=False,
             encoding="utf-8-sig"
@@ -115,13 +102,13 @@ if uploaded:
     
         st.download_button(
             "Завантажити корпус",
-            csv_2,
+            csv_stats,
             "Корпус_" + uploaded.name,
             "text/csv"
         )
         st.download_button(
             "Завантажити повний розбір",
-            csv_1,
+            csv_full,
             "Розбір_" + uploaded.name,
             "text/csv"
         )

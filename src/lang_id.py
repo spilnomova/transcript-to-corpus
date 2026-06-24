@@ -1,4 +1,5 @@
 import json
+import numpy
 import Levenshtein
 
 FUNCTIONAL = {"PREP", "CONJ", "PRCL", "INTJ"}
@@ -16,21 +17,6 @@ with open('./data/wiktionary-ua2ru.json', 'r') as file:
 
 with open('./data/custom-ua2ru.json', 'r') as file:
     UA2RU.update(json.load(file))
-
-def language(lemma, pos):
-    # exceptions
-    if pos in {None, "UNKN"} or lemma in {"било", "надо", "носок", "он"}:
-        return {"ua": False, "score": 1}
-    # score
-    if pos in FUNCTIONAL or lemma in {"ні", "так", "нє", "нєт", "да"}:
-        score = 0.3
-    else:
-        score = 1
-    # main logic
-    if lemma in VESUM:
-        return {"ua": True, "score": score}
-    else:
-        return {"ua": False, "score": score}
 
 def similarity(string1, string2):
     string1 = "".join([char for char in string1 if char in CONSONANTS])
@@ -62,3 +48,19 @@ def related_to_ru(uk_word):
 
 # related_to_ru("око")
 # related_to_ru("побігти")
+
+def language(lemma, pos):
+    # exceptions
+    if pos in {None, "UNKN"} or lemma in {"било", "надо", "носок", "он"}:
+        return {"ua": numpy.nan, "non-ua": 1, "only-ua": numpy.nan}
+    # score
+    if pos in FUNCTIONAL or lemma in {"ні", "так", "нє", "нєт", "да"}:
+        score = 0.3
+    else:
+        score = 1
+    # main logic
+    is_ua = lemma in VESUM
+    return {"ua": score if is_ua else numpy.nan,
+            "non-ua": score if not is_ua else numpy.nan,
+            "only-ua": 1.0 if is_ua and related_to_ru(lemma) == False
+                           else numpy.nan}
