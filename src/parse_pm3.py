@@ -16,12 +16,13 @@ def get_lemma(word_morph):
     exceptions = {"зуби": "зуб",
                   "мишку": "мишка",
                   "червоним": "червоний"}
-    if word_morph.word in {"бить", "єсть", "животіє", "мишка", "можна", "патом",
-                           "окуляри", "очки", "сходи", "хованки"}:
+    if word_morph.word in {"бить", "єсть", "животіє", "мишка", "можна", "патом", "потом",
+                           "носкі", "окуляри", "очки", "сходи", "хованки"}:
         return word_morph.word
     elif word_morph.word in exceptions.keys():
         return exceptions[word_morph.word]
-    elif set.intersection(fake_methods, set([type(i[0]) for i in word_morph.methods_stack])):
+    elif set.intersection(fake_methods,
+                          set([type(i[0]) for i in word_morph.methods_stack])):
         return word_morph.word
     else:
         return word_morph.normal_form

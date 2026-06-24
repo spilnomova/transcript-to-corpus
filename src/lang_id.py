@@ -19,9 +19,7 @@ with open('./data/custom-ua2ru.json', 'r') as file:
 
 def language(lemma, pos):
     # exceptions
-    if lemma in {"більше", "вже", "ще"}:
-        return {"ua": True, "score": 1}
-    if pos in {None, "UNKN"} or lemma == "носок":
+    if pos in {None, "UNKN"} or lemma in {"било", "надо", "носок", "он"}:
         return {"ua": False, "score": 1}
     # score
     if pos in FUNCTIONAL or lemma in {"ні", "так", "нє", "нєт", "да"}:
